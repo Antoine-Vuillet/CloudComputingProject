@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>D&D Monsters</title>
+    <script>
+      async function autocomplete() {
+          const input = document.getElementById('monster-name');
+          const suggestionsDiv = document.getElementById('suggestions');
+          const query = input.value;
+  
+          // Fetch suggestions only if the input length is 2 or more
+          if (query.length < 2) {
+              suggestionsDiv.innerHTML = '';
+              return;
+          }
+  
+          const response = await fetch(`/monsters/autocomplete?query=${encodeURIComponent(query)}`);
+          const data = await response.json();
+          
+          if (data.suggestions.length > 0) {
+              suggestionsDiv.innerHTML = data.suggestions.map(s => `<div onclick="selectSuggestion('${s}')">${s}</div>`).join('');
+          } else {
+              suggestionsDiv.innerHTML = '<div>No suggestions found</div>';
+          }
+      }
+  
+      function selectSuggestion(name) {
+          document.getElementById('monster-name').value = name;
+          document.getElementById('suggestions').innerHTML = '';
+      }
+
+      let debounceTimeout;
+async function autocomplete() {
+    const input = document.getElementById('monster-name');
+    const suggestionsDiv = document.getElementById('suggestions');
+    const query = input.value;
+
+    // Fetch suggestions only if the input length is 2 or more
+    if (query.length < 2) {
+        suggestionsDiv.innerHTML = '';
+        return;
+    }
+
+    clearTimeout(debounceTimeout);
+    debounceTimeout = setTimeout(async () => {
+        const response = await fetch(`/monsters/autocomplete?query=${encodeURIComponent(query)}`);
+        const data = await response.json();
+
+        if (data.suggestions.length > 0) {
+            suggestionsDiv.innerHTML = data.suggestions.map(s => `<div onclick="selectSuggestion('${s}')">${s}</div>`).join('');
+        } else {
+            suggestionsDiv.innerHTML = '<div>No suggestions found</div>';
+        }
+    }, 300); // Adjust timeout as needed
+}
+  </script>
+  <style>
+    #suggestions {
+        border: 1px solid #ccc;
+        max-height: 200px;
+        overflow-y: auto;
+        position: absolute; /* To position below the input */
+        background-color: white; /* Ensure background color is white */
+        z-index: 1000; /* Ensure it appears above other content */
+    }
+    #suggestions div {
+        padding: 8px;
+        cursor: pointer;
+    }
+    #suggestions div:hover {
+        background-color: #f0f0f0; /* Highlight on hover */
+    }
+</style>
+</head>
+<body>
+    <h1>Find a D&D Monster</h1>
+    <form action="/monsters" method="post">
+        <input type="text" id="monster-name" name="name" onkeyup="autocomplete()" required>
+        <div id="suggestions" style="border: 1px solid #ccc; max-height: 200px; overflow-y: auto;"></div>
+        <button type="submit">Get Monster Details</button>
+    </form>
+</body>
+</html>
